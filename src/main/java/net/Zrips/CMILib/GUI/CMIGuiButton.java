@@ -8,10 +8,12 @@ import java.util.Map.Entry;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -61,8 +63,9 @@ public class CMIGuiButton {
     }
 
     public void hideItemFlags() {
-        if (item == null)
+        if (item == null) {
             return;
+        }
 
         if (Version.isCurrentEqualOrHigher(Version.v1_20_R4)) {
             ItemMeta meta = item.getItemMeta();
@@ -82,7 +85,7 @@ public class CMIGuiButton {
                 meta.addItemFlags(ItemFlag.HIDE_STORED_ENCHANTS);
             } catch (Throwable e) {
             }
-            
+
             item.setItemMeta(meta);
             return;
         }
@@ -91,8 +94,9 @@ public class CMIGuiButton {
     }
 
     public CMIGuiButton hideToltip() {
-        if (!Version.isCurrentEqualOrHigher(Version.v1_21_R2))
+        if (!Version.isCurrentEqualOrHigher(Version.v1_21_R2)) {
             return this;
+        }
 
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
@@ -146,10 +150,11 @@ public class CMIGuiButton {
     @Deprecated
     public CMIGuiButton(Integer slot, Material material, int data, String name) {
         this.slot = slot;
-        if (Version.isCurrentEqualOrHigher(Version.v1_13_R1))
+        if (Version.isCurrentEqualOrHigher(Version.v1_13_R1)) {
             this.item = new ItemStack(material, 1);
-        else
+        } else {
             this.item = new ItemStack(material, 1, (short) data);
+        }
         if (name != null) {
             ItemMeta meta = this.item.getItemMeta();
             meta.setDisplayName(CMIChatColor.translate(name));
@@ -166,11 +171,13 @@ public class CMIGuiButton {
         this.item = item == null ? null : item.clone();
         if (this.item != null && this.item.getDurability() == 32767) {
             CMIMaterial d = CMIMaterial.getRandom(CMIMaterial.get(this.item));
-            if (d != null && d.getLegacyData() != -1)
+            if (d != null && d.getLegacyData() != -1) {
                 this.item.setDurability((short) d.getLegacyData());
+            }
         }
-        if (hideFlags)
+        if (hideFlags) {
             this.hideItemFlags();
+        }
     }
 
     private CMITask sched = null;
@@ -213,8 +220,9 @@ public class CMIGuiButton {
                 }
                 updateLooks();
                 update(sgui);
-                if (sgui != null)
+                if (sgui != null) {
                     sgui.updateButton(b);
+                }
             }
         }, 20L, updateInterval);
     }
@@ -224,13 +232,15 @@ public class CMIGuiButton {
     }
 
     public void update() {
-        if (this.sgui != null)
+        if (this.sgui != null) {
             sgui.updateButton(this);
+        }
     }
 
     public void update(CMIGui gui) {
-        if (gui != null)
+        if (gui != null) {
             gui.updateButton(this);
+        }
     }
 
     public Integer getSlot() {
@@ -287,17 +297,20 @@ public class CMIGuiButton {
 
     public List<GUIButtonCommand> getCommands(GUIClickType type) {
         List<GUIButtonCommand> list = commandMap.get(type);
-        if (list == null)
+        if (list == null) {
             list = new ArrayList<GUIButtonCommand>();
+        }
         return list;
     }
 
     public CMIGuiButton setName(String name) {
-        if (this.item == null)
+        if (this.item == null) {
             return this;
+        }
         ItemMeta meta = this.item.getItemMeta();
-        if (meta == null)
+        if (meta == null) {
             return this;
+        }
 
         if (name.contains("\n")) {
             String[] split = name.split("\\n");
@@ -323,16 +336,19 @@ public class CMIGuiButton {
     }
 
     public CMIGuiButton addLore(String l) {
-        if (this.item == null)
+        if (this.item == null) {
             return this;
+        }
         ItemMeta meta = this.item.getItemMeta();
 
-        if (meta == null)
+        if (meta == null) {
             return this;
+        }
 
         List<String> lore = meta.getLore();
-        if (lore == null)
+        if (lore == null) {
             lore = new ArrayList<String>();
+        }
 
         if (l.contains("\\n")) {
             String[] split = l.split("\\\\n");
@@ -344,8 +360,9 @@ public class CMIGuiButton {
             for (String one : split) {
                 lore.add(CMIChatColor.translate(one));
             }
-        } else
+        } else {
             lore.add(CMIChatColor.translate(l));
+        }
 
         meta.setLore(lore);
         this.item.setItemMeta(meta);
@@ -354,8 +371,9 @@ public class CMIGuiButton {
     }
 
     public CMIGuiButton clearLore() {
-        if (this.item == null)
+        if (this.item == null) {
             return this;
+        }
         ItemMeta meta = this.item.getItemMeta();
         if (meta != null) {
             meta.setLore(new ArrayList<String>());
@@ -365,8 +383,9 @@ public class CMIGuiButton {
     }
 
     public CMIGuiButton addItemName(String name) {
-        if (this.item == null)
+        if (this.item == null) {
             return this;
+        }
         ItemMeta meta = this.item.getItemMeta();
         meta.setDisplayName(CMIChatColor.translate(name));
         this.item.setItemMeta(meta);
@@ -389,15 +408,17 @@ public class CMIGuiButton {
         if (type == null) {
             for (GUIClickType one : GUIClickType.values()) {
                 List<GUIButtonCommand> list = commandMap.get(one);
-                if (list == null)
+                if (list == null) {
                     list = new ArrayList<GUIButtonCommand>();
+                }
                 list.add(new GUIButtonCommand(command, vis));
                 commandMap.put(one, list);
             }
         } else {
             List<GUIButtonCommand> list = commandMap.get(type);
-            if (list == null)
+            if (list == null) {
                 list = new ArrayList<GUIButtonCommand>();
+            }
             list.add(new GUIButtonCommand(command, vis));
             commandMap.put(type, list);
         }
@@ -413,8 +434,9 @@ public class CMIGuiButton {
     }
 
     public CMIGuiButton addCommand(Location loc) {
-        if (loc == null)
+        if (loc == null) {
             return this;
+        }
         addCommand("cmi tppos " + loc.getWorld().getName() + " " + loc.getX() + " " + loc.getY() + " " + loc.getBlockZ() + " " + loc.getPitch() + " " + loc.getYaw());
         return this;
     }
@@ -423,15 +445,24 @@ public class CMIGuiButton {
         return item;
     }
 
+    public static final NamespacedKey GUI_ICON_KEY =
+            new NamespacedKey(CMILib.getInstance(), "gui_icon");
+
     public ItemStack getItem(Player player) {
 
-        if (item == null)
+        if (item == null) {
             return null;
+        }
 
         ItemStack i = item.clone();
 
-        if (this.isLocked() && !CMIMaterial.isAir(i.getType()))
-            i = (ItemStack) new CMINBT(i).setString(GUIManager.CMIGUIIcon, GUIManager.LIProtection);
+        if (this.isLocked() && !CMIMaterial.isAir(i.getType())) {
+            i.editPersistentDataContainer(it -> it.set(
+                    GUI_ICON_KEY,
+                    PersistentDataType.BOOLEAN,
+                    Boolean.TRUE
+            ));
+        }
 
         ItemMeta meta = i.hasItemMeta() ? i.getItemMeta() : null;
         boolean modified = false;

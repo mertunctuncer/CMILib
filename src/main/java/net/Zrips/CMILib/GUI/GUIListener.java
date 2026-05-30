@@ -27,8 +27,13 @@ import net.Zrips.CMILib.GUI.GUIManager.InvType;
 import net.Zrips.CMILib.Items.CMIItemStack;
 import net.Zrips.CMILib.NBT.CMINBT;
 import net.Zrips.CMILib.Version.Schedulers.CMIScheduler;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
+
+import static net.Zrips.CMILib.GUI.CMIGuiButton.GUI_ICON_KEY;
 
 public class GUIListener implements Listener {
+
     CMILib plugin;
 
     public GUIListener(CMILib plugin) {
@@ -48,16 +53,18 @@ public class GUIListener implements Listener {
         for (ItemStack one : player.getInventory().getContents()) {
             CMINBT nbt = new CMINBT(one);
             String res = nbt.getString(GUIManager.CMIGUIIcon);
-            if (res == null || !res.equalsIgnoreCase(GUIManager.LIProtection))
+            if (res == null || !res.equalsIgnoreCase(GUIManager.LIProtection)) {
                 continue;
+            }
             player.getInventory().remove(one);
         }
     }
 
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onPlayerDeathEvent(PlayerDeathEvent event) {
-        if (event.getEntity() == null)
+        if (event.getEntity() == null) {
             return;
+        }
         clearIconItems(event.getEntity());
     }
 
@@ -84,21 +91,24 @@ public class GUIListener implements Listener {
 
         final Player player = (Player) event.getWhoClicked();
 
-        if (!plugin.getGUIManager().isOpenedGui(player))
+        if (!plugin.getGUIManager().isOpenedGui(player)) {
             return;
+        }
 
         CMIGui gui = plugin.getGUIManager().getGui(player);
 
-        if (!gui.isClickLogging())
+        if (!gui.isClickLogging()) {
             return;
+        }
 
         if (gui.isAllowShift() && event.getAction().equals(InventoryAction.MOVE_TO_OTHER_INVENTORY) && (event.getClickedInventory() == null || event.getClickedInventory().getType().equals(
-            InventoryType.PLAYER)))
+                InventoryType.PLAYER))) {
             return;
+        }
 
         try {
             gui.addClickLog(event.getClickedInventory() == null ? null : event.getClickedInventory().getType(), event.isCancelled(), event.getClick(), event.getAction(), event.getCurrentItem(), event
-                .getCursor(), event.getSlot());
+                    .getCursor(), event.getSlot());
         } catch (Throwable e) {
             e.printStackTrace();
         }
@@ -106,8 +116,9 @@ public class GUIListener implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onInventoryOpenEvent(InventoryOpenEvent event) {
-        if (!(event.getPlayer() instanceof Player))
+        if (!(event.getPlayer() instanceof Player)) {
             return;
+        }
         clearIconItems((Player) event.getPlayer());
     }
 
@@ -115,16 +126,24 @@ public class GUIListener implements Listener {
     public void onItemDrop(PlayerDropItemEvent event) {
         final Player player = event.getPlayer();
 
-        if (plugin.getGUIManager().isOpenedGui(player))
+        if (plugin.getGUIManager().isOpenedGui(player)) {
             event.setCancelled(true);
+        }
 
         ItemStack one = event.getItemDrop().getItemStack();
 
-        CMINBT nbt = new CMINBT(one);
-        String res = nbt.getString(GUIManager.CMIGUIIcon);
+        ItemMeta meta = one.getItemMeta();
 
-        if (res == null || !res.equalsIgnoreCase(GUIManager.LIProtection))
+        if (meta == null) {
             return;
+        }
+
+        if (!meta.getPersistentDataContainer().has(
+                GUI_ICON_KEY,
+                PersistentDataType.BOOLEAN)) {
+            return;
+        }
+
         event.setCancelled(true);
         clearIconItems(player);
     }
@@ -132,13 +151,15 @@ public class GUIListener implements Listener {
     @EventHandler(priority = EventPriority.NORMAL)
     public void onInventoryClick(final InventoryClickEvent event) {
 
-        if (event.isCancelled() && !event.getWhoClicked().getGameMode().toString().equalsIgnoreCase("Spectator"))
+        if (event.isCancelled() && !event.getWhoClicked().getGameMode().toString().equalsIgnoreCase("Spectator")) {
             return;
+        }
 
         final Player player = (Player) event.getWhoClicked();
 
-        if (!plugin.getGUIManager().isOpenedGui(player))
+        if (!plugin.getGUIManager().isOpenedGui(player)) {
             return;
+        }
         CMIGui gui = plugin.getGUIManager().getGui(player);
 
         if (player.isSleeping()) {
@@ -166,15 +187,14 @@ public class GUIListener implements Listener {
 //	if (gui != null)
 //	    return; 
 
-        if (event.getClick() == ClickType.DOUBLE_CLICK || event.getHotbarButton() != -1)
-
-        {
+        if (event.getClick() == ClickType.DOUBLE_CLICK || event.getHotbarButton() != -1) {
             event.setCancelled(true);
             return;
         }
 
-        if (!gui.isAllowShift() && event.isShiftClick())
+        if (!gui.isAllowShift() && event.isShiftClick()) {
             event.setCancelled(true);
+        }
 
         if (event.isShiftClick() && gui.isNoItemPlacement(InvType.Gui) && !event.getClickedInventory().equals(gui.getInv())) {
             event.setCancelled(true);
@@ -183,17 +203,18 @@ public class GUIListener implements Listener {
         InventoryAction action = event.getAction();
 
         boolean allowed = action == InventoryAction.PICKUP_ALL ||
-            action == InventoryAction.PICKUP_ONE ||
-            action == InventoryAction.PICKUP_HALF ||
-            action == InventoryAction.PICKUP_SOME ||
-            action == InventoryAction.PLACE_ALL ||
-            action == InventoryAction.PLACE_ONE ||
-            action == InventoryAction.PLACE_SOME ||
-            (gui.isAllowShift() && action == InventoryAction.MOVE_TO_OTHER_INVENTORY) ||
-            (gui.isAllowClone() && action == InventoryAction.CLONE_STACK);
+                action == InventoryAction.PICKUP_ONE ||
+                action == InventoryAction.PICKUP_HALF ||
+                action == InventoryAction.PICKUP_SOME ||
+                action == InventoryAction.PLACE_ALL ||
+                action == InventoryAction.PLACE_ONE ||
+                action == InventoryAction.PLACE_SOME ||
+                (gui.isAllowShift() && action == InventoryAction.MOVE_TO_OTHER_INVENTORY) ||
+                (gui.isAllowClone() && action == InventoryAction.CLONE_STACK);
 
-        if (!allowed)
+        if (!allowed) {
             event.setCancelled(true);
+        }
 
         if (!gui.isAllowPickUpAll() && !canClickByTimer(player.getUniqueId())) {
             event.setCancelled(true);
@@ -204,29 +225,33 @@ public class GUIListener implements Listener {
         buttons.add(event.getRawSlot());
         if (!plugin.getGUIManager().canClick(player, buttons, event.getCursor())) {
             event.setCancelled(true);
-            if (GUIManager.usePackets)
+            if (GUIManager.usePackets) {
                 CMIScheduler.get().runTask(() -> player.setItemOnCursor(player.getItemOnCursor()));
+            }
             gui.updateButtons();
         }
 
         if (plugin.getGUIManager().isLockedPart(player, buttons)) {
             event.setCancelled(true);
-            if (GUIManager.usePackets)
+            if (GUIManager.usePackets) {
                 CMIScheduler.get().runTask(() -> player.setItemOnCursor(player.getItemOnCursor()));
+            }
         }
 
         if (plugin.getGUIManager().isLockedPart(player, buttons, event.getCursor())) {
             event.setCancelled(true);
-            if (GUIManager.usePackets)
+            if (GUIManager.usePackets) {
                 CMIScheduler.get().runTask(() -> player.setItemOnCursor(player.getItemOnCursor()));
+            }
         }
 
         // removing click limit in case its move to another inventory event which can happen after double clicking on item while holding same one on cursor
-        if (!gui.isAllowMoveAll() && action.equals(InventoryAction.MOVE_TO_OTHER_INVENTORY))
+        if (!gui.isAllowMoveAll() && action.equals(InventoryAction.MOVE_TO_OTHER_INVENTORY)) {
             GUIManager.limit.remove(player.getUniqueId());
+        }
 
         boolean click = plugin.getGUIManager().processClick(player, event.getCurrentItem(), buttons, plugin.getGUIManager().getClickType(event.isLeftClick(), event.isShiftClick(), action, event
-            .getClick()));
+                .getClick()));
 
         if (!click) {
             event.setCancelled(true);
@@ -235,7 +260,7 @@ public class GUIListener implements Listener {
 
         // From TradeMe plugin
         if (!event.isCancelled() &&
-            gui.isAllowShift() && event.getAction().equals(InventoryAction.MOVE_TO_OTHER_INVENTORY) && event.getClickedInventory().getType().equals(InventoryType.PLAYER)) {
+                gui.isAllowShift() && event.getAction().equals(InventoryAction.MOVE_TO_OTHER_INVENTORY) && event.getClickedInventory().getType().equals(InventoryType.PLAYER)) {
 
             event.setCancelled(true);
             ItemStack item = event.getCurrentItem().clone();
@@ -246,7 +271,7 @@ public class GUIListener implements Listener {
                     if (gui.isClickLogging()) {
                         try {
                             gui.addClickLog(event.getClickedInventory() == null ? null : event.getClickedInventory().getType(), event.isCancelled(), event.getClick(), event.getAction(), event
-                                .getCurrentItem(), event.getCursor(), event.getSlot());
+                                    .getCurrentItem(), event.getCursor(), event.getSlot());
                         } catch (Throwable e) {
                             e.printStackTrace();
                         }
@@ -263,7 +288,7 @@ public class GUIListener implements Listener {
         CMIScheduler.get().runTask(() -> clearIconItems(player));
     }
 
-//    @EventHandler(priority = EventPriority.MONITOR)
+    //    @EventHandler(priority = EventPriority.MONITOR)
 //    public void onInventoryClicks(final InventoryClickEvent event) {
 //	final Player player = (Player) event.getWhoClicked();
 //    }
@@ -276,8 +301,9 @@ public class GUIListener implements Listener {
     public void onInventoryDragEventLog(final InventoryDragEvent event) {
         final Player player = (Player) event.getWhoClicked();
 
-        if (!plugin.getGUIManager().isOpenedGui(player))
+        if (!plugin.getGUIManager().isOpenedGui(player)) {
             return;
+        }
 
         if (player.isSleeping()) {
             player.closeInventory();
@@ -286,8 +312,9 @@ public class GUIListener implements Listener {
         }
 
         CMIGui gui = plugin.getGUIManager().getGui(player);
-        if (!gui.isClickLogging())
+        if (!gui.isClickLogging()) {
             return;
+        }
         try {
             gui.addClickLog(event.getInventory().getType(), event.isCancelled(), event.getCursor(), event.getNewItems(), event.getInventorySlots(), event.getType());
         } catch (Throwable e) {
@@ -298,13 +325,15 @@ public class GUIListener implements Listener {
     @EventHandler(priority = EventPriority.NORMAL)
     public void onInventoryMove(final InventoryDragEvent event) {
 
-        if (event.isCancelled() && !event.getWhoClicked().getGameMode().toString().equalsIgnoreCase("Spectator"))
+        if (event.isCancelled() && !event.getWhoClicked().getGameMode().toString().equalsIgnoreCase("Spectator")) {
             return;
+        }
 
         final Player player = (Player) event.getWhoClicked();
 
-        if (!plugin.getGUIManager().isOpenedGui(player))
+        if (!plugin.getGUIManager().isOpenedGui(player)) {
             return;
+        }
 
         CMIGui gui = plugin.getGUIManager().getGui(player);
 
@@ -315,14 +344,17 @@ public class GUIListener implements Listener {
 
         final List<Integer> buttons = new ArrayList<Integer>();
         buttons.addAll(event.getRawSlots());
-        if (!plugin.getGUIManager().canClick(player, buttons, event.getCursor()))
+        if (!plugin.getGUIManager().canClick(player, buttons, event.getCursor())) {
             event.setCancelled(true);
+        }
 
-        if (plugin.getGUIManager().isLockedPart(player, buttons, event.getCursor()))
+        if (plugin.getGUIManager().isLockedPart(player, buttons, event.getCursor())) {
             event.setCancelled(true);
+        }
 
-        if (!plugin.getGUIManager().processClick(player, event.getOldCursor(), buttons, plugin.getGUIManager().getClickType(true, false, null, null)))
+        if (!plugin.getGUIManager().processClick(player, event.getOldCursor(), buttons, plugin.getGUIManager().getClickType(true, false, null, null))) {
             event.setCancelled(true);
+        }
 
         CMIScheduler.get().runTask(() -> clearIconItems(player));
     }
@@ -333,8 +365,9 @@ public class GUIListener implements Listener {
 
         Player player = event.getPlayer();
 
-        if (!plugin.getGUIManager().isOpenedGui(player))
+        if (!plugin.getGUIManager().isOpenedGui(player)) {
             return;
+        }
 
         CMIGui gui = plugin.getGUIManager().getGui(player);
 
